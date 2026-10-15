@@ -1,0 +1,18 @@
+# Local database credentials and secrets
+/.env
+/.env.*
+!/.env.example
+*.pem
+*.key
+
+# Local Docker bind-mount data (kept on disk; never committed)
+/docker/mysql/data/
+/docker/redis/data/
+/docker/mysql/backups/
+/docker/redis/backups/
+
+# Logs and build output
+*.log
+/foundation/server/target/
+/foundation/web/node_modules/
+/foundation/web/dist/

@@ -1,0 +1,7 @@
+# 只用于本机开发。正式环境不要启用 dev，否则会导入虚构种子并创建开发账号。
+spring:
+  flyway:
+    locations: classpath:db/migration,classpath:db/dev
+
+foundation:
+  dev-admin-password: ${DEV_ADMIN_PASSWORD:}
