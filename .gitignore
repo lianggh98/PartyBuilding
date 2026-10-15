@@ -1,0 +1,10 @@
+# Local database credentials
+/.env
+/.env.*
+!/.env.example
+
+# Local Docker bind-mount data (kept on disk; never committed)
+/docker/mysql/data/
+/docker/redis/data/
+/docker/mysql/backups/
+/docker/redis/backups/
