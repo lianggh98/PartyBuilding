@@ -1,0 +1,32 @@
+server:
+  port: 18080
+
+spring:
+  application:
+    name: party-foundation
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+  datasource:
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:13309/party_foundation?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+  jackson:
+    time-zone: Asia/Shanghai
+    serialization:
+      write-dates-as-timestamps: false
+  flyway:
+    enabled: true
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    default-enum-type-handler: org.apache.ibatis.type.EnumTypeHandler
+  global-config:
+    db-config:
+      id-type: auto
+
+foundation:
+  jwt:
+    # 本地验证用环境变量注入。长度至少 32。不要把真实密钥写进仓库。
+    secret: ${JWT_SECRET:}
+    ttl-hours: 12
