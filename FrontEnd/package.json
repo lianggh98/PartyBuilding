@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "postinstall": "node ./node_modules/@vue-office/docx/lib/script/postinstall.js && node ./node_modules/@vue-office/excel/lib/script/postinstall.js && node ./node_modules/@vue-office/pdf/lib/script/postinstall.js"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.1.0",
