@@ -7,8 +7,8 @@ spring:
   autoconfigure:
     exclude: org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
   datasource:
-    url: ${DB_URL:jdbc:mysql://127.0.0.1:13309/party_foundation?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai}
-    username: ${DB_USERNAME:root}
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:25481/party_foundation?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai}
+    username: ${DB_USERNAME:partyapp}
     password: ${DB_PASSWORD:}
   jackson:
     time-zone: Asia/Shanghai

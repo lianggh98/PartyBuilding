@@ -1,29 +1,28 @@
 # 智慧党建第二阶段技术底座
 
-单体应用：Spring Boot 3.3 + Spring Security + MyBatis-Plus + Vue 3 + Element Plus + MySQL 8。
+单体应用：Spring Boot 3.3 + Spring Security + MyBatis-Plus + Vue 3 + Element Plus + MySQL 8.4。
 
-不包含旧仓库的登录逻辑，也不包含微服务、工作流、商城等无关模块。移动端不在本目录。
+不包含旧仓库的登录逻辑，也不包含微服务、工作流、商城等无关模块。移动端不在本目录。Redis 由根目录 Compose 提供，本模块当前不连接它。
 
 ## 本地启动
 
-数据库口令和 JWT 密钥只通过环境变量注入，示例见 `.env.example`。
+中间件、端口和初始化方式见仓库根目录的 `docker/README.md`。
 
 ```bash
-docker run -d --name party-foundation-mysql \
-  -e MYSQL_ROOT_PASSWORD="$DB_PASSWORD" \
-  -e MYSQL_DATABASE=party_foundation \
-  -p 127.0.0.1:13309:3306 mysql:8.0
+cp .env.example .env
+# 填写本机口令。正式环境不要使用 dev profile。
+docker compose up -d
 
 cd foundation/server
-DB_PASSWORD=... JWT_SECRET=... mvn spring-boot:run
-# 服务监听 18080，避开本机可能已经占用的 8080。
+set -a && source ../../.env && set +a
+mvn -DskipTests spring-boot:run
 
 cd foundation/web
 npm install
 npm run dev
 ```
 
-浏览器打开 `http://127.0.0.1:5173`。种子账号的本地演示口令见 `server/src/main/resources/db/migration/V1__init.sql` 文件头，仅用于本机验证。
+浏览器打开 `http://127.0.0.1:5173`。开发账号由 `DEV_ADMIN_PASSWORD` 在首次启动时创建，口令不在源码里。
 
 ## 已实现
 

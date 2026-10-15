@@ -7,7 +7,7 @@ services:
     environment:
       TZ: Asia/Shanghai
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-partybuilding}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-party_foundation}
       MYSQL_USER: ${MYSQL_USER:-partyapp}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env}
     command:

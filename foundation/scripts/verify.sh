@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# 对本机已启动的底座做接口验证。演示口令与种子脚本一致，只用于本地。
+# 对本机已启动的底座做接口验证。口令来自环境变量，不写进仓库。
 set -euo pipefail
 BASE="${BASE:-http://127.0.0.1:18080}"
-PASSWORD="${DEMO_PASSWORD:-admin123}"
+PASSWORD="${DEMO_PASSWORD:?Set DEMO_PASSWORD to the local DEV_ADMIN_PASSWORD}"
 
 curl_api() {
   curl --noproxy '*' -sS "$@"

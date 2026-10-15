@@ -8,7 +8,7 @@
 
 本机 JDK 17.0.18。后端 `foundation/server` 使用 Spring Boot 3.3.6、Tomcat 10.1.33、MyBatis-Plus 3.5.9、Flyway。前端 `foundation/web` 使用 Vite 6.4.4、Vue 3.5、Element Plus 2.9。数据库是本机 Docker 中的 MySQL 8.0，库名 `party_foundation`，只监听 `127.0.0.1:13309`。
 
-数据库口令和 JWT 密钥通过环境变量 `DB_PASSWORD`、`JWT_SECRET` 注入，没有写进仓库。种子账号的本地演示口令写在 `foundation/server/src/main/resources/db/migration/V1__init.sql` 文件头，只用于本机验证。
+数据库口令和 JWT 密钥通过环境变量 `DB_PASSWORD`、`JWT_SECRET` 注入，没有写进仓库。当时的种子口令写在 `V1__init.sql`。整合 Docker 时该文件已删除，正式迁移不再包含账号或口令。见第 7 节。
 
 服务端口用 `18080`。本机 `127.0.0.1:8080` 已被其他进程占用，若沿用 8080，请求到不了这个应用。
 
@@ -55,7 +55,9 @@ foundation/
       security/    JWT 签发与过滤器，每次请求按用户 id 重载角色
       service/     登录、组织、党员、数据范围
       web/         /api/auth、/api/orgs、/api/members
-    src/main/resources/db/migration/V1__init.sql
+    src/main/resources/db/migration/V1__schema.sql
+    src/main/resources/db/dev/V100__dev_seed.sql   仅 dev profile
+    src/main/java/.../seed/DevUserSeeder.java      仅 dev profile
   web/             Vue 3 管理端：登录、组织树、党员档案
   scripts/verify.sh
 ```
@@ -100,7 +102,8 @@ foundation/
 - 前端路由只检查本地是否有令牌。过期和越权由服务端返回 401 或 403。页面上的按钮隐藏不能代替服务端校验，服务端已经另做了校验。
 - 组织删除和党员修改接口已有，页面还没有删除和编辑。
 - 没有操作审计。登录失败和越权访问没有单独的审计表。
-- 演示口令写在迁移脚本中。部署前必须更换，并继续用环境变量保管数据库口令和 JWT 密钥。
+- 开发账号只在 `dev` profile 下按 `DEV_ADMIN_PASSWORD` 生成。正式环境不要启用 `dev`，否则会创建固定的开发账号。短于 12 位或 `admin123` 一类弱口令会拒绝启动。
+- Flyway 10.10.0 提示 MySQL 8.4 新于它声明测试过的 8.1。本次迁移已经成功执行。
 - 前端生产包仍是单文件，约 1.1 MB。
 
 ## 6. 下一阶段建议
@@ -110,3 +113,40 @@ foundation/
 3. 发展党员按五个固定阶段建表，不引入工作流引擎。
 4. 向学校确认统一身份和企业微信参数之前，不把外部登录写成已完成。
 5. 企业微信 H5 单独开工程或单独开路由组，不与小程序混在同一个交付物里。
+
+## 7. Docker 环境整合验证
+
+日期同样是 2026-10-15。在 `foundation/party-base-validation` 上以 `--no-ff` 合并 `origin/chore/local-middleware-compose`，没有冲突，没有合并 `main`，也没有改 PR #1。
+
+本机 `25481` 和 `26381` 空闲，继续使用这两个端口，并且只绑定 `127.0.0.1`。镜像是 `mysql:8.4`（实际 `8.4.11`）和 `redis:latest`。数据目录是 `docker/mysql/data/`、`docker/redis/data/`，已写入 `.gitignore`。口令只在本机 `.env`，没有进入提交。
+
+旧的 `01_partybuilding_schema.sql` 已删除。空数据目录第一次启动时，MySQL 只执行 `00_foundation_placeholder.sql`（`SELECT 1`），并创建空库 `party_foundation` 和用户 `partyapp`。表由后端 Flyway 创建。
+
+后端以 `SPRING_PROFILES_ACTIVE=dev` 连接 `127.0.0.1:25481`，日志为：
+
+```text
+Migrating schema `party_foundation` to version "1 - schema"
+Migrating schema `party_foundation` to version "100 - dev seed"
+Successfully applied 2 migrations to schema `party_foundation`, now at version v100
+Started FoundationApplication in 1.095 seconds
+```
+
+库里只有 `flyway_schema_history`、`party_org`、`party_member`、`sys_user`。没有旧系统的 `user`、`activity` 等 14 张表，也没有导入旧人员。`party_org` 7 行，开发用户 5 个。口令哈希不是原来的 `admin123` 哈希。
+
+`foundation/scripts/verify.sh` 对本机 18080 的结果：
+
+| 检查 | 结果 |
+| --- | --- |
+| 未登录访问党员列表 | HTTP 401，`未登录` |
+| `admin` 登录 | `SYSTEM_ADMIN`，`canWrite=true` |
+| 组织树 | 7 个节点，名称和类型与种子一致 |
+| 新增并查询党员 | 新增 id 5「验证新增」，按姓名查到 1 条 |
+| `general_admin` | 只能看到张一、李二；读王三和越权新增都是 HTTP 403 |
+| `branch_viewer` | 新增 HTTP 403「没有操作权限」，列表只有张一 |
+| `branch_admin` | 向兄弟支部新增 HTTP 403 |
+
+Redis `PING` 返回 `PONG`。业务代码没有改成使用 Redis。
+
+随后执行 `docker compose down` 再 `docker compose up -d`，没有删除数据目录。新容器日志里没有再次执行 `docker-entrypoint-initdb.d`。重启后仍是 7 个组织、5 个用户、5 名党员（含「验证新增」），Flyway 仍是 version 1 和 100。Redis 再次 `PONG`。原后端进程重连后，`admin` 登录 HTTP 200，角色仍是 `SYSTEM_ADMIN`。
+
+这次没有重新打开浏览器。页面代码没有改，接口就是页面调用的同一组 `/api`。
